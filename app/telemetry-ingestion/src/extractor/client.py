@@ -3,8 +3,7 @@ import pandas as pd
 import logging
 import argparse
 
-
-from fastf1.core import Session, Telemetry
+from fastf1.core import Session
 
 
 logging.basicConfig(
@@ -14,6 +13,17 @@ logging.basicConfig(
 
 CACHE_DIR = 'cache'
 fastf1.Cache.enable_cache(CACHE_DIR)
+
+
+def parse_args() -> argparse.Namespace:
+    """Configure et lit les arguments passés dans le terminal."""
+    parser = argparse.ArgumentParser(description="Extracts telemetry data from Formula 1 session.")
+
+    parser.add_argument("--year", type=int, required=True, help="The championship year")
+    parser.add_argument("--race", type=int, required=True, help="The race number")
+    parser.add_argument("--session_type", type=str, required=True, choices=['FP1', 'FP2', 'FP3', 'Q', 'SQ', 'S', 'R'], help="The session type")
+
+    return parser.parse_args()
 
 
 def get_session(year: int, race: int, session_type: str) -> Session:
@@ -61,39 +71,36 @@ def merge_data(cars: dict) -> pd.DataFrame:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Extracts telemetry data from Formula 1 session."
-    )
 
-    parser.add_argument(
-        "--year",
-        type=int,
-        required=True,
-        help="The championship year (e.g., 2026)",
-    )
 
-    parser.add_argument(
-        "--race",
-        type=int,
-        required=True,
-        help="The race number (e.g., 1)",
-    )
-
-    parser.add_argument(
-        "--session_type",
-        type=str,
-        required=True,
-        help="The session type ('R', 'Q', 'FP1', etc.)",
-    )
-
-    args = parser.parse_args()
+    args = parse_args()
 
     try:
         race = get_session(args.year, args.race, args.session_type)
         cars_data = merge_data(race.car_data) # type: ignore
+        weather_data = race.weather_data
+        laps = race.laps
+        pos_data = race.pos_data
+        race_control_messages = race.race_control_messages
+        session_status = race.session_status
 
         if not cars_data.empty:
             logging.info(f"Processing completed successfully: {len(cars_data)} telemetry rows ready.")
+
+        if not weather_data.empty:
+            logging.info(f"Processing completed successfully: {len(weather_data)} weather rows ready.")
+
+        if not laps.empty:
+            logging.info(f"Processing completed successfully: {len(laps)} laps rows ready.")
+
+        if not pos_data.empty:
+            logging.info(f"Processing completed successfully: {len(pos_data)} position data rows ready.")
+
+        if not race_control_messages.empty:
+            logging.info(f"Processing completed successfully: {len(race_control_messages)} race control messages rows ready.")
+
+        if not session_status.empty:
+            logging.info(f"Processing completed successfully: {len(session_status)} session status rows ready.")
 
     except Exception as e:
         logging.error(f"An error occurred during execution: {e}")
