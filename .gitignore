@@ -1,0 +1,12 @@
+# OS files
+.DS_Store
+
+# IDE files
+.idea/
+
+# Python & Virtual Env
+.venv/
+__pycache__/
+
+# Projet F1
+cache/
