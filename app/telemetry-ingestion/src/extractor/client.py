@@ -77,30 +77,24 @@ def main() -> None:
 
     try:
         race = get_session(args.year, args.race, args.session_type)
+
         cars_data = merge_data(race.car_data) # type: ignore
-        weather_data = race.weather_data
-        laps = race.laps
-        pos_data = race.pos_data
-        race_control_messages = race.race_control_messages
-        session_status = race.session_status
+        pos_data = merge_data(race.pos_data) # type: ignore
 
-        if not cars_data.empty:
-            logging.info(f"Processing completed successfully: {len(cars_data)} telemetry rows ready.")
+        f1_datasets = {
+            "telemetry": cars_data,
+            "weather": race.weather_data,
+            "laps": race.laps,
+            "positions": pos_data,
+            "race_control": race.race_control_messages,
+            "session_status": race.session_status
+        }
 
-        if not weather_data.empty:
-            logging.info(f"Processing completed successfully: {len(weather_data)} weather rows ready.")
-
-        if not laps.empty:
-            logging.info(f"Processing completed successfully: {len(laps)} laps rows ready.")
-
-        if not pos_data.empty:
-            logging.info(f"Processing completed successfully: {len(pos_data)} position data rows ready.")
-
-        if not race_control_messages.empty:
-            logging.info(f"Processing completed successfully: {len(race_control_messages)} race control messages rows ready.")
-
-        if not session_status.empty:
-            logging.info(f"Processing completed successfully: {len(session_status)} session status rows ready.")
+        for dataset_name, df in f1_datasets.items():
+            if df is not None and not df.empty:
+                logging.info(f"{dataset_name.capitalize()} extracted successfully: {len(df)} rows ready.")
+            else:
+                logging.warning(f"️No data found for {dataset_name}.")
 
     except Exception as e:
         logging.error(f"An error occurred during execution: {e}")
